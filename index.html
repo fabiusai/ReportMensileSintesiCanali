@@ -94,6 +94,36 @@
   <script>
     let rawData=[],filtered=[],cols={},totalVis=0,totalInter=0;
     const findCol=regex=>Object.keys(rawData[0]||{}).find(h=>new RegExp(regex,'i').test(h));
+    
+    function formatKValue(num) {
+      num = +num || 0;
+      
+      // Gestione milioni
+      if (num >= 1000000) {
+        const mValue = num / 1000000;
+        const roundedM = Math.round(mValue * 100) / 100;
+        if (roundedM % 1 === 0) {
+          return roundedM.toFixed(0) + 'M';
+        } else {
+          return roundedM.toFixed(2).replace('.', ',') + 'M';
+        }
+      }
+      
+      // Gestione migliaia
+      if (num >= 1000) {
+        const kValue = num / 1000;
+        const roundedK = Math.round(kValue * 100) / 100;
+        if (roundedK % 1 === 0) {
+          return roundedK.toFixed(0) + 'K';
+        } else {
+          return roundedK.toFixed(2).replace('.', ',') + 'K';
+        }
+      }
+      
+      // Valori inferiori a 1000
+      return num.toString();
+    }
+    
     const addTooltip=(icon)=>{
       icon.onclick=()=>{
         let txt='';const type=icon.dataset.copy;
@@ -127,14 +157,15 @@
       r.readAsBinaryString(f);
     });
     function formatNumberItalian(num) {
-      return (+num || 0).toLocaleString('it-IT');
+      // Formatta il numero con punti come separatori delle migliaia
+      return (+num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
     function processData(){
       filtered=rawData.filter(r=>r[cols.campagna]==='Editoriale');
       totalVis=filtered.reduce((a,c)=>a+Number(c[cols.vis]||0),0);
       totalInter=filtered.reduce((a,c)=>a+Number(c[cols.inter]||0),0);
-      document.getElementById('formattedVis').innerText=formatNumberItalian(totalVis);
-      document.getElementById('formattedInter').innerText=formatNumberItalian(totalInter);
+      document.getElementById('formattedVis').innerText=formatKValue(totalVis);
+      document.getElementById('formattedInter').innerText=formatKValue(totalInter);
       const aggV={},aggI={};
       filtered.forEach(r=>{
         const l=r[cols.label]||'Nessuna';
@@ -169,8 +200,8 @@
       });
       const visTot=data.reduce((a,c)=>a+Number(c[cols.vis]||0),0);
       const intTot=data.reduce((a,c)=>a+Number(c[cols.inter]||0),0);
-      document.getElementById('chanVisTot').innerText=formatNumberItalian(visTot);
-      document.getElementById('chanInterTot').innerText=formatNumberItalian(intTot);
+      document.getElementById('chanVisTot').innerText=formatKValue(visTot);
+      document.getElementById('chanInterTot').innerText=formatKValue(intTot);
       const tv=document.getElementById('tableVisChan').tBodies[0];
       const ti=document.getElementById('tableInterChan').tBodies[0];
       tv.innerHTML=''; ti.innerHTML='';
